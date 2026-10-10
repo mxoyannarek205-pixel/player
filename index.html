@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Музыкальный архив</title>
+<meta name="theme-color" content="#1E0F28">
+<style>
+/* ---------- Шрифты (кириллица + латиница, лежат локально в /fonts) ---------- */
+@font-face{font-family:"Unbounded";font-weight:500;font-display:swap;src:url(fonts/unbounded-cyrillic-500-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Unbounded";font-weight:500;font-display:swap;src:url(fonts/unbounded-latin-500-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Unbounded";font-weight:700;font-display:swap;src:url(fonts/unbounded-cyrillic-700-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Unbounded";font-weight:700;font-display:swap;src:url(fonts/unbounded-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Manrope";font-weight:400;font-display:swap;src:url(fonts/manrope-cyrillic-400-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Manrope";font-weight:400;font-display:swap;src:url(fonts/manrope-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Manrope";font-weight:600;font-display:swap;src:url(fonts/manrope-cyrillic-600-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Manrope";font-weight:600;font-display:swap;src:url(fonts/manrope-latin-600-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Manrope";font-weight:700;font-display:swap;src:url(fonts/manrope-cyrillic-700-normal.woff2) format("woff2");unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:"Manrope";font-weight:700;font-display:swap;src:url(fonts/manrope-latin-700-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
+
+/* ---------- Токены ---------- */
+:root{
+  --bg:#1E0F28;
+  --panel:#2B1640;
+  --panel-2:#371C50;
+  --line:rgba(244,235,221,.12);
+  --gold:#D3A263;
+  --gold-hi:#E7BC82;
+  --text:#F4EBDD;
+  --muted:#B9A8C6;
+  --on-gold:#2A1633;
+  --display:"Unbounded","Segoe UI",system-ui,sans-serif;
+  --body:"Manrope","Segoe UI",system-ui,-apple-system,sans-serif;
+  --bar-h:84px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{color-scheme:dark}
+body{
+  font-family:var(--body);color:var(--text);background:var(--bg);
+  background-image:radial-gradient(1100px 600px at 12% -10%,#5B2A66 0%,transparent 60%),radial-gradient(900px 500px at 100% 110%,#3B1E58 0%,transparent 60%);
+  background-attachment:fixed;
+  min-height:100vh;padding-bottom:calc(var(--bar-h) + 28px);
+  -webkit-font-smoothing:antialiased;line-height:1.5;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--gold-hi);outline-offset:3px;border-radius:8px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 28px}
+
+/* ---------- Шапка ---------- */
+header{padding:32px 0 26px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,4.4vw,46px);line-height:1.1;letter-spacing:-.02em}
+header p{margin-top:10px;color:var(--muted);font-size:17px}
+
+/* ---------- Раскладка ---------- */
+.layout{display:grid;grid-template-columns:minmax(300px,400px) 1fr;gap:36px;align-items:start}
+
+/* ---------- Плеер ---------- */
+.player{position:sticky;top:20px;background:var(--panel);border:1px solid var(--line);border-radius:28px;padding:22px}
+.cover{aspect-ratio:1;max-width:min(100%,calc(100vh - 540px));min-width:220px;margin:0 auto;border-radius:18px;overflow:hidden;position:relative;background:var(--panel-2)}
+.cover img,.cover .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.art{display:grid;place-items:center;font-family:var(--display);font-weight:700;color:rgba(255,255,255,.92);font-size:clamp(64px,12vw,120px)}
+.meta{margin-top:16px;min-height:72px}
+.meta h2{font-family:var(--display);font-weight:700;font-size:22px;line-height:1.2;overflow-wrap:anywhere}
+.meta p{margin-top:6px;color:var(--muted);font-size:15px}
+
+.seek{margin-top:14px}
+.times{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;margin-top:6px}
+
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:20px;background:transparent;cursor:pointer;--p:0%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:6px;background:linear-gradient(to right,var(--gold) var(--p),rgba(244,235,221,.16) var(--p))}
+input[type=range]::-moz-range-track{height:6px;border-radius:6px;background:rgba(244,235,221,.16)}
+input[type=range]::-moz-range-progress{height:6px;border-radius:6px;background:var(--gold)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--text);margin-top:-5px;border:0;box-shadow:0 0 0 4px rgba(211,162,99,.25)}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--text);border:0;box-shadow:0 0 0 4px rgba(211,162,99,.25)}
+
+.controls{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.ib{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;color:var(--muted);transition:color .15s,background .15s}
+.ib:hover{color:var(--text);background:rgba(244,235,221,.08)}
+.ib.on{color:var(--gold-hi)}
+.ib svg{width:22px;height:22px;fill:currentColor}
+.play{width:66px;height:66px;background:var(--gold);color:var(--on-gold)}
+.play:hover{background:var(--gold-hi);color:var(--on-gold)}
+.play svg{width:28px;height:28px}
+
+.vol{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--muted)}
+.vol svg{width:20px;height:20px;fill:currentColor;flex:none}
+.vol input{max-width:none}
+
+/* ---------- Список ---------- */
+.list-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px}
+.list-head h3{font-family:var(--display);font-weight:500;font-size:16px}
+.list-head span{color:var(--muted);font-size:14px}
+ol{list-style:none}
+.track{
+  display:grid;grid-template-columns:56px 1fr auto auto;gap:16px;align-items:center;width:100%;
+  text-align:left;padding:10px 12px;border-radius:16px;border:1px solid transparent;
+  transition:background .15s;
+}
+.track:hover{background:rgba(244,235,221,.06)}
+.track.active{background:var(--panel);border-color:var(--line)}
+.thumb{width:56px;height:56px;border-radius:12px;overflow:hidden;position:relative;background:var(--panel-2)}
+.thumb img,.thumb .art{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.thumb .art{font-size:22px}
+.t-title{font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.t-artist{color:var(--muted);font-size:14px;margin-top:2px;overflow-wrap:anywhere}
+.t-dur{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.eq{display:none;gap:3px;align-items:flex-end;height:18px;width:18px}
+.eq i{display:block;width:4px;background:var(--gold);border-radius:2px;height:30%}
+.track.active .eq{display:flex}
+.track.active.playing .eq i{animation:eq 0.9s ease-in-out infinite}
+.track.active.playing .eq i:nth-child(2){animation-delay:.2s}
+.track.active.playing .eq i:nth-child(3){animation-delay:.4s}
+@keyframes eq{0%,100%{height:25%}50%{height:100%}}
+.track.active .t-title{color:var(--gold-hi)}
+.dl-row{width:40px;height:40px}
+
+/* ---------- Нижняя панель ---------- */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;height:var(--bar-h);z-index:10;
+  background:rgba(30,15,40,.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-top:1px solid var(--line);
+}
+.bar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.bar-now{min-width:0}
+.bar-now b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-now small{color:var(--muted);font-size:13px}
+.bar-btns{display:flex;gap:12px;flex:none}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;height:48px;padding:0 22px;border-radius:999px;
+  font-weight:700;font-size:15px;text-decoration:none;white-space:nowrap;transition:background .15s,transform .1s;
+}
+.btn svg{width:18px;height:18px;fill:currentColor}
+.btn:active{transform:scale(.98)}
+.btn-fill{background:var(--gold);color:var(--on-gold)}
+.btn-fill:hover{background:var(--gold-hi)}
+.btn-ghost{border:1.5px solid var(--gold);color:var(--gold-hi)}
+.btn-ghost:hover{background:rgba(211,162,99,.14)}
+.btn small{font-weight:600;opacity:.75;font-size:13px}
+
+/* ---------- Фон ---------- */
+#bg{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.wrap{position:relative;z-index:1}
+.chip{display:inline-block;margin-top:10px;padding:4px 12px;border-radius:999px;background:rgba(211,162,99,.16);color:var(--gold-hi);font-size:13px;font-weight:700}
+.chip[hidden]{display:none}
+
+/* ---------- Вкладки ---------- */
+.tabs{display:flex;gap:6px;margin-bottom:18px;padding:5px;background:rgba(244,235,221,.06);border-radius:999px;width:max-content;max-width:100%;overflow-x:auto}
+.tab{padding:10px 20px;border-radius:999px;font-weight:700;font-size:14px;color:var(--muted);white-space:nowrap;transition:background .15s,color .15s}
+.tab:hover{color:var(--text)}
+.tab[aria-selected=true]{background:var(--gold);color:var(--on-gold)}
+.panel[hidden]{display:none}
+
+/* ---------- Ремикс и эквалайзер ---------- */
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.preset{padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:var(--panel);text-align:left;transition:border-color .15s,background .15s}
+.preset:hover{border-color:rgba(211,162,99,.5)}
+.preset.on{border-color:var(--gold);background:var(--panel-2)}
+.preset b{display:block;font-size:15px}
+.preset small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.preset:disabled{opacity:.45;cursor:not-allowed}
+.ctl{margin-top:16px;padding:18px 20px;border-radius:18px;background:var(--panel);border:1px solid var(--line)}
+.ctl-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:4px}
+.ctl-top label{font-weight:700}
+.ctl-top output{color:var(--muted);font-size:14px;text-align:right}
+.check{display:flex;gap:12px;align-items:center;margin-top:14px;cursor:pointer;font-weight:600;font-size:15px}
+.check input{width:20px;height:20px;accent-color:var(--gold);flex:none}
+.hint{margin-top:12px;color:var(--muted);font-size:14px}
+.warn{margin-top:16px;padding:14px 18px;border-radius:16px;background:rgba(211,162,99,.12);border:1px solid rgba(211,162,99,.35);font-size:14px}
+.warn[hidden]{display:none}
+.warn code{background:rgba(244,235,221,.12);padding:1px 7px;border-radius:6px;font-size:13px}
+input[type=range]:disabled{opacity:.35;cursor:not-allowed}
+.bands{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;margin-top:6px}
+.band{display:flex;flex-direction:column;align-items:center;gap:4px}
+.bv{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;height:16px}
+.band-sl{position:relative;width:36px;height:170px}
+.band-sl input{position:absolute;width:160px;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-90deg)}
+.bf{font-size:12px;font-weight:600}
+
+/* ---------- Заставка ---------- */
+.loader{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);
+  background-image:radial-gradient(900px 600px at 50% 40%,#5B2A66 0%,transparent 65%);
+  transition:opacity .5s ease,visibility .5s}
+.loader.done{opacity:0;visibility:hidden}
+.loader-in{text-align:center;padding:24px;width:min(420px,100%)}
+.loader h2{font-family:var(--display);font-weight:700;font-size:clamp(26px,6vw,40px);line-height:1.15;letter-spacing:-.02em}
+.loader p{color:var(--muted);margin-top:10px;font-size:15px}
+.loader-track{height:6px;border-radius:6px;background:rgba(244,235,221,.16);margin-top:28px;overflow:hidden}
+.loader-fill{height:100%;width:0;background:var(--gold);border-radius:6px;animation:load 3s linear forwards}
+@keyframes load{to{width:100%}}
+
+/* ---------- Окно выбора ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:none;place-items:center;padding:20px;background:rgba(14,6,20,.7);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal.open{display:grid}
+.dialog{position:relative;width:min(520px,100%);background:var(--panel);border:1px solid var(--line);border-radius:26px;padding:28px}
+.dialog h2{font-family:var(--display);font-weight:700;font-size:21px;line-height:1.2;padding-right:40px}
+.dialog > p{color:var(--muted);margin-top:8px;font-size:15px}
+.close{position:absolute;top:14px;right:14px}
+.opts{display:grid;gap:12px;margin-top:22px}
+.opt{display:grid;grid-template-columns:48px 1fr;gap:16px;align-items:center;padding:16px;border-radius:18px;
+  background:var(--panel-2);border:1px solid var(--line);color:var(--text);text-decoration:none;text-align:left;transition:border-color .15s,background .15s}
+.opt:hover{border-color:var(--gold);background:#412258}
+.opt-ic{width:48px;height:48px;border-radius:14px;background:var(--gold);color:var(--on-gold);display:grid;place-items:center}
+.opt-ic svg{width:24px;height:24px;fill:currentColor}
+.opt b{display:block;font-size:16px}
+.opt span{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+
+/* ---------- Адаптив ---------- */
+@media (max-width:860px){
+  .layout{grid-template-columns:1fr;gap:28px}
+  .player{position:static}
+  .cover{max-width:360px;margin:0 auto}
+}
+@media (max-width:640px){
+  :root{--bar-h:76px}
+  .wrap{padding:0 18px}
+  header{padding:30px 0 24px}
+  .bar-now{display:none}
+  .bar-btns{width:100%}
+  .btn{flex:1;justify-content:center;padding:0 12px;height:46px;font-size:14px}
+  .btn small{display:none}
+  .track{grid-template-columns:48px 1fr auto;gap:12px}
+  .thumb{width:48px;height:48px}
+  .dl-row{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<canvas id="bg" aria-hidden="true"></canvas>
+
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="loader-in">
+    <h2>Музыкальный архив</h2>
+    <p>Загружаем песни…</p>
+    <div class="loader-track"><div class="loader-fill"></div></div>
+  </div>
+</div>
+
+<div class="wrap">
+  <header>
+    <h1>Музыкальный архив</h1>
+    <p id="summary"></p>
+  </header>
+
+  <main class="layout">
+    <section class="player" aria-label="Плеер">
+      <div class="cover" id="cover"></div>
+      <div class="meta">
+        <h2 id="title">&nbsp;</h2>
+        <p id="artist">&nbsp;</p>
+        <span class="chip" id="variant" hidden></span>
+      </div>
+
+      <div class="seek">
+        <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Перемотка">
+        <div class="times"><span id="cur">0:00</span><span id="dur">0:00</span></div>
+      </div>
+
+      <div class="controls">
+        <button class="ib" id="shuffle" aria-label="Перемешать" aria-pressed="false" title="Перемешать">
+          <svg viewBox="0 0 24 24"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
+        </button>
+        <button class="ib" id="prev" aria-label="Предыдущая" title="Предыдущая">
+          <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9.500 12z"/></svg>
+        </button>
+        <button class="ib play" id="play" aria-label="Играть" title="Играть / пауза (пробел)">
+          <svg viewBox="0 0 24 24" id="play-ic"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="ib" id="next" aria-label="Следующая" title="Следующая">
+          <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5l10.500 7L4 19z"/></svg>
+        </button>
+        <button class="ib" id="repeat" aria-label="Повторять песню" aria-pressed="false" title="Повторять песню">
+          <svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
+        </button>
+      </div>
+
+      <div class="vol">
+        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.500 3A4.500 4.500 0 0 0 14 8v8a4.500 4.500 0 0 0 2.500-4z"/></svg>
+        <input type="range" id="vol" min="0" max="100" value="80" aria-label="Громкость">
+      </div>
+    </section>
+
+    <section aria-label="Песни и звук">
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-songs" aria-selected="true" aria-controls="panel-songs" data-tab="songs">Песни</button>
+        <button class="tab" role="tab" id="tab-remix" aria-selected="false" aria-controls="panel-remix" data-tab="remix">Ремикс</button>
+        <button class="tab" role="tab" id="tab-eq" aria-selected="false" aria-controls="panel-eq" data-tab="eq">Эквалайзер</button>
+      </div>
+
+      <div class="panel" id="panel-songs" role="tabpanel" aria-labelledby="tab-songs">
+        <div class="list-head"><h3>Все песни</h3><span id="count"></span></div>
+        <ol id="list"></ol>
+      </div>
+
+      <div class="panel" id="panel-remix" role="tabpanel" aria-labelledby="tab-remix" hidden>
+        <div class="list-head"><h3>Скорость и тон</h3><span>Работает на всех песнях</span></div>
+        <div class="presets" id="presets"></div>
+
+        <div class="ctl">
+          <div class="ctl-top"><label for="speed">Скорость</label><output id="speed-out" for="speed"></output></div>
+          <input type="range" id="speed" min="50" max="200" value="100" step="1">
+          <label class="check"><input type="checkbox" id="link" checked> Менять тон вместе со скоростью</label>
+          <p class="hint">Если включено, ускорение делает голос выше, а замедление ниже, как в ремиксах Speed Up и Slowed Down. Если выключить, тон остаётся прежним.</p>
+        </div>
+        <div class="ctl">
+          <div class="ctl-top"><label for="rev">Реверберация</label><output id="rev-out" for="rev">0%</output></div>
+          <input type="range" id="rev" min="0" max="100" value="0" step="1">
+        </div>
+        <div class="warn" id="warn-remix" hidden></div>
+      </div>
+
+      <div class="panel" id="panel-eq" role="tabpanel" aria-labelledby="tab-eq" hidden>
+        <div class="list-head"><h3>Эквалайзер</h3><span id="eq-state"></span></div>
+        <div class="presets" id="eq-presets"></div>
+        <div class="ctl"><div class="bands" id="bands"></div></div>
+        <div class="warn" id="warn-eq" hidden></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="bar">
+  <div class="wrap">
+    <div class="bar-now"><b id="bar-title">—</b><small id="bar-artist"></small></div>
+    <div class="bar-btns">
+      <a class="btn btn-fill" id="dl-one" href="#" download>
+        <svg viewBox="0 0 24 24"><path d="M11 3h2v9.200l3.300-3.300 1.400 1.400L12 16l-5.700-5.700 1.400-1.400L11 12.200V3zM5 18h14v2H5z"/></svg>
+        Скачать песню
+      </a>
+      <button class="btn btn-ghost" id="dl-all" type="button" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24"><path d="M11 3h2v9.200l3.300-3.300 1.400 1.400L12 16l-5.700-5.700 1.400-1.400L11 12.200V3zM5 18h14v2H5z"/></svg>
+        Скачать все песни
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="dialog">
+    <button class="ib close" id="m-close" type="button" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6.4 5 12 10.600 17.600 5 19 6.400 13.400 12 19 17.600 17.600 19 12 13.400 6.400 19 5 17.600 10.600 12 5 6.400z"/></svg></button>
+    <h2 id="m-title">Как скачать все песни?</h2>
+    <p>Выбери формат, в котором удобнее.</p>
+    <div class="opts">
+      <a class="opt" href="all-songs.mp4" download="all-songs.mp4" data-close>
+        <div class="opt-ic"><svg viewBox="0 0 24 24"><path d="M4 5h11a2 2 0 0 1 2 2v2.500l4-2.500v10l-4-2.500V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z"/></svg></div>
+        <div><b>Одно видео</b><span>MP4, все песни подряд, около 40 МБ</span></div>
+      </a>
+      <a class="opt" href="all-songs.zip" download="all-songs.zip" data-close>
+        <div class="opt-ic"><svg viewBox="0 0 24 24"><path d="M4 4h7l2 2h7v14H4V4zm6 4h2v2h-2V8zm0 3h2v2h-2v-2zm0 3h2v2h-2v-2z"/></svg></div>
+        <div><b>ZIP-архив</b><span>7 отдельных mp3-файлов, около 50 МБ</span></div>
+      </a>
+    </div>
+  </div>
+</div>
+
+<audio id="audio" preload="metadata"></audio>
+
+<script>
+/* ============ Список песен: чтобы добавить новую — положи mp3 в /songs и допиши строку ============ */
+const KOHAR = "KOHAR Symphony Orchestra and Choir";
+const KOHAR_FT = KOHAR + ", Satenik Sargsyan, Aleksan Harutunyan";
+const TRACKS = [
+  { file:"donajazz.mp3",            title:"Donajazz",            artist:KOHAR,    dur:203, cover:"covers/kohar-5.jpg" },
+  { file:"tetmajazz.mp3",           title:"Tetmajazz",           artist:KOHAR,    dur:295, cover:"covers/kohar-3.jpg" },
+  { file:"ha-nina-kotchari.mp3",    title:"Ha Nina – Kotchari",  artist:KOHAR_FT, dur:345, cover:"covers/kohar-3.jpg" },
+  { file:"maratoug.mp3",            title:"Maratoug",            artist:KOHAR_FT, dur:213, cover:"covers/kohar-3.jpg" },
+  { file:"almasde-shoughoum.mp3",   title:"Almasde Shoughoum E", artist:"KOHAR", dur:197, cover:"covers/kohar-3.jpg" },
+  { file:"evans-adventure.mp3",     title:"Evans Adventure",     artist:"Tower Of Hell", dur:169, cover:"covers/tower-of-hell.jpg" },
+  { file:"recons-train.mp3",        title:"Recons Train",        artist:"Tower Of Hell", dur:168, cover:"covers/tower-of-hell.jpg" },
+];
+
+const $ = id => document.getElementById(id);
+const audio = $("audio");
+let cur = 0, shuffle = false, repeat = false, seeking = false;
+
+const fmt = s => { if(!isFinite(s)) return "0:00"; s=Math.floor(s); return Math.floor(s/60)+":"+String(s%60).padStart(2,"0"); };
+const plural = (n,a,b,c)=>{ const m=n%100,d=n%10; return (m>10&&m<20)?c:d===1?a:(d>=2&&d<=4)?b:c; };
+
+function artEl(t, cls){
+  if(t.cover){ const i=new Image(); i.src=t.cover; i.alt=""; return i; }
+  const d=document.createElement("div"); d.className="art";
+  d.style.background=`linear-gradient(145deg,hsl(${t.hue[0]} 55% 42%),hsl(${t.hue[1]} 50% 24%))`;
+  d.textContent=t.title.trim()[0].toUpperCase(); return d;
+}
+function setPlayIcon(playing){
+  $("play-ic").innerHTML = playing ? '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>' : '<path d="M8 5v14l11-7z"/>';
+  $("play").setAttribute("aria-label", playing ? "Пауза" : "Играть");
+  document.querySelectorAll(".track").forEach((el,i)=>el.classList.toggle("playing", playing && i===cur));
+}
+function paintRange(el){ el.style.setProperty("--p", (el.value-el.min)/(el.max-el.min)*100+"%"); }
+
+/* ---------- Список ---------- */
+const total = TRACKS.reduce((a,t)=>a+t.dur,0);
+const mins = Math.round(total/60);
+$("summary").textContent = `${TRACKS.length} ${plural(TRACKS.length,"песня","песни","песен")}, около ${mins} ${plural(mins,"минуты","минут","минут")} музыки`;
+$("count").textContent = `${TRACKS.length} ${plural(TRACKS.length,"трек","трека","треков")}`;
+
+TRACKS.forEach((t,i)=>{
+  const li=document.createElement("li");
+  const row=document.createElement("div");
+  row.className="track"; row.tabIndex=0; row.setAttribute("role","button");
+  row.setAttribute("aria-label","Играть: "+t.title);
+  const th=document.createElement("div"); th.className="thumb"; th.appendChild(artEl(t));
+  const info=document.createElement("div");
+  info.innerHTML=`<div class="t-title"></div><div class="t-artist"></div>`;
+  info.children[0].textContent=t.title; info.children[1].textContent=t.artist;
+  const eq=document.createElement("div"); eq.className="eq"; eq.innerHTML="<i></i><i></i><i></i>";
+  const dur=document.createElement("div"); dur.className="t-dur"; dur.textContent=fmt(t.dur);
+  // 4 колонки: обложка, текст, эквалайзер+время, скачать
+  const right=document.createElement("div"); right.style.cssText="display:flex;align-items:center;gap:14px";
+  right.append(eq,dur);
+  const dl=document.createElement("a"); dl.className="ib dl-row"; dl.href="songs/"+t.file; dl.download=t.file;
+  dl.setAttribute("aria-label","Скачать: "+t.title); dl.title="Скачать"; 
+  dl.innerHTML='<svg viewBox="0 0 24 24"><path d="M11 3h2v9.200l3.300-3.300 1.400 1.400L12 16l-5.700-5.700 1.400-1.400L11 12.200V3zM5 18h14v2H5z"/></svg>';
+  dl.addEventListener("click",e=>e.stopPropagation());
+  row.append(th,info,right,dl);
+  row.addEventListener("click",()=>{ if(i===cur && audio.src){ toggle(); } else { load(i,true); } });
+  row.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); row.click(); } });
+  li.appendChild(row); $("list").appendChild(li);
+});
+
+/* ---------- Загрузка трека ---------- */
+function load(i, autoplay){
+  cur=i; const t=TRACKS[i];
+  audio.src="songs/"+t.file;
+  $("cover").replaceChildren(artEl(t));
+  $("title").textContent=t.title; $("artist").textContent=t.artist;
+  $("bar-title").textContent=t.title; $("bar-artist").textContent=t.artist;
+  $("dl-one").href="songs/"+t.file; $("dl-one").setAttribute("download",t.file);
+  $("dur").textContent=fmt(t.dur); $("cur").textContent="0:00";
+  $("seek").value=0; paintRange($("seek"));
+  document.querySelectorAll(".track").forEach((el,k)=>el.classList.toggle("active",k===i));
+  document.title=t.title+" – Музыкальный архив";
+  if("mediaSession" in navigator){
+    navigator.mediaSession.metadata=new MediaMetadata({title:t.title,artist:t.artist,album:"Музыкальный архив",artwork:t.cover?[{src:t.cover,sizes:"600x600",type:"image/jpeg"}]:[]});
+  }
+  if(autoplay) audio.play().catch(()=>{});
+  setPlayIcon(autoplay);
+}
+function toggle(){ if(!audio.src){ load(cur,true); return; } audio.paused ? audio.play().catch(()=>{}) : audio.pause(); }
+function step(dir){
+  if(shuffle && TRACKS.length>1){ let n; do{ n=Math.floor(Math.random()*TRACKS.length);}while(n===cur); load(n,true); return; }
+  load((cur+dir+TRACKS.length)%TRACKS.length,true);
+}
+
+/* ---------- События ---------- */
+audio.addEventListener("play",()=>setPlayIcon(true));
+audio.addEventListener("pause",()=>setPlayIcon(false));
+audio.addEventListener("loadedmetadata",()=>{ $("dur").textContent=fmt(audio.duration); });
+audio.addEventListener("timeupdate",()=>{
+  if(seeking||!audio.duration) return;
+  $("cur").textContent=fmt(audio.currentTime);
+  $("seek").value=audio.currentTime/audio.duration*1000; paintRange($("seek"));
+});
+audio.addEventListener("ended",()=>{ if(repeat){ audio.currentTime=0; audio.play(); } else step(1); });
+
+$("seek").addEventListener("input",e=>{ seeking=true; paintRange(e.target); if(audio.duration) $("cur").textContent=fmt(e.target.value/1000*audio.duration); });
+$("seek").addEventListener("change",e=>{ if(audio.duration) audio.currentTime=e.target.value/1000*audio.duration; seeking=false; });
+$("vol").addEventListener("input",e=>{ audio.volume=e.target.value/100; paintRange(e.target); });
+audio.volume=.8; paintRange($("vol"));
+
+$("play").onclick=toggle;
+$("prev").onclick=()=>{ if(audio.currentTime>3) audio.currentTime=0; else step(-1); };
+$("next").onclick=()=>step(1);
+$("shuffle").onclick=e=>{ shuffle=!shuffle; e.currentTarget.classList.toggle("on",shuffle); e.currentTarget.setAttribute("aria-pressed",shuffle); };
+$("repeat").onclick=e=>{ repeat=!repeat; e.currentTarget.classList.toggle("on",repeat); e.currentTarget.setAttribute("aria-pressed",repeat); };
+
+document.addEventListener("keydown",e=>{
+  if(["INPUT","TEXTAREA"].includes(document.activeElement.tagName) && e.key!==" ") return;
+  if(e.code==="Space" && !["BUTTON","A"].includes(document.activeElement.tagName)){ e.preventDefault(); toggle(); }
+  if(e.key==="ArrowRight" && e.altKey) step(1);
+  if(e.key==="ArrowLeft" && e.altKey) step(-1);
+});
+if("mediaSession" in navigator){
+  navigator.mediaSession.setActionHandler("previoustrack",()=>step(-1));
+  navigator.mediaSession.setActionHandler("nexttrack",()=>step(1));
+}
+
+
+/* ============ Ремикс: скорость и тон ============ */
+const WA = (location.protocol !== "file:") && (window.AudioContext || window.webkitAudioContext);
+const WARN = 'Эквалайзер и реверберация не работают, когда страница открыта двойным кликом (так решил браузер). Запусти <code>start.bat</code> из папки сайта, и они заработают. Скорость и тон работают и так.';
+let rate = 1, linked = true, revAmt = 0;
+
+const PRESETS = [
+  { name:"Оригинал",        rate:1,    rev:0  },
+  { name:"Slowed Down",     rate:.85,  rev:0  },
+  { name:"Slowed + Reverb", rate:.8,   rev:55 },
+  { name:"Speed Up",        rate:1.25, rev:0  },
+  { name:"Nightcore",       rate:1.4,  rev:0  },
+];
+function semitones(r){ return 12*Math.log2(r); }
+function fmtSemi(v){
+  const a=Math.abs(v); if(a<.05) return "тон без изменений";
+  const sign=v<0?"−":"+"; const r=Math.round(a*10)/10;
+  const word = Number.isInteger(r) ? plural(r,"полутон","полутона","полутонов") : "полутона";
+  return `тон ${sign}${String(r).replace(".",",")} ${word}`;
+}
+function applyRate(){
+  audio.defaultPlaybackRate = rate;
+  audio.playbackRate = rate;
+  audio.preservesPitch = !linked; audio.webkitPreservesPitch = !linked; audio.mozPreservesPitch = !linked;
+  $("speed").value = Math.round(rate*100); paintRange($("speed"));
+  $("speed-out").textContent = `×${rate.toFixed(2).replace(".",",")}, ${linked ? fmtSemi(semitones(rate)) : "тон без изменений"}`;
+  $("link").checked = linked;
+  const hit = PRESETS.findIndex(p => Math.abs(p.rate-rate)<.005 && p.rev===revAmt && linked);
+  document.querySelectorAll("#presets .preset").forEach((b,i)=>b.classList.toggle("on", i===hit));
+  const chip=$("variant");
+  if(Math.abs(rate-1)<.005 && revAmt===0){ chip.hidden=true; }
+  else { chip.hidden=false; chip.textContent = (hit>0 ? PRESETS[hit].name+", " : "Ремикс, ") + "×" + rate.toFixed(2).replace(".",","); }
+}
+function applyReverb(){
+  $("rev").value = revAmt; paintRange($("rev")); $("rev-out").textContent = revAmt+"%";
+  if(wet){ const k=revAmt/100; wet.gain.value = k*0.9; dry.gain.value = 1 - k*0.35; }
+}
+
+PRESETS.forEach(p=>{
+  const b=document.createElement("button"); b.type="button"; b.className="preset";
+  b.innerHTML="<b></b><small></small>"; b.children[0].textContent=p.name;
+  b.children[1].textContent = "×"+p.rate.toFixed(2).replace(".",",") + (p.rev&&WA?", реверб":"");
+  b.onclick=()=>{ rate=p.rate; linked=true; revAmt=WA?p.rev:0; applyRate(); applyReverb(); };
+  $("presets").appendChild(b);
+});
+$("speed").addEventListener("input",e=>{ rate=e.target.value/100; applyRate(); });
+$("link").addEventListener("change",e=>{ linked=e.target.checked; applyRate(); });
+$("rev").addEventListener("input",e=>{ revAmt=+e.target.value; applyReverb(); applyRate(); });
+audio.addEventListener("loadedmetadata",()=>{ audio.playbackRate=rate; });
+
+/* ============ Эквалайзер ============ */
+const BANDS = [60,150,400,1000,2400,6000,12000,16000];
+const BAND_LBL = ["60","150","400","1k","2,4k","6k","12k","16k"];
+const EQ_PRESETS = {
+  "Плоский":[0,0,0,0,0,0,0,0],
+  "Бас":    [7,6,3,0,0,0,0,0],
+  "Вокал":  [-2,-1,0,3,4,3,0,-1],
+  "Яркий":  [-1,0,0,0,2,4,6,6],
+  "Оркестр":[3,2,0,-1,0,2,3,3],
+  "Рок":    [5,3,-1,-2,1,3,5,5],
+};
+let eqVals = [0,0,0,0,0,0,0,0];
+function paintEq(){
+  document.querySelectorAll(".band input").forEach((inp,i)=>{
+    inp.value=eqVals[i]; paintRange(inp);
+    inp.parentElement.parentElement.querySelector(".bv").textContent = (eqVals[i]>0?"+":eqVals[i]<0?"−":"")+Math.abs(eqVals[i]);
+  });
+  const hit=Object.values(EQ_PRESETS).findIndex(a=>a.every((v,i)=>v===eqVals[i]));
+  document.querySelectorAll("#eq-presets .preset").forEach((b,i)=>b.classList.toggle("on",i===hit));
+  $("eq-state").textContent = hit===0 ? "Выключен" : "Включён, дБ";
+  filters.forEach((f,i)=>{ f.gain.value=eqVals[i]; });
+}
+BANDS.forEach((hz,i)=>{
+  const d=document.createElement("div"); d.className="band";
+  d.innerHTML='<div class="bv">0</div><div class="band-sl"><input type="range" min="-12" max="12" step="1" value="0"></div><div class="bf"></div>';
+  d.querySelector(".bf").textContent=BAND_LBL[i];
+  const inp=d.querySelector("input"); inp.setAttribute("aria-label","Полоса "+BAND_LBL[i]+" Гц");
+  inp.disabled=!WA;
+  inp.addEventListener("input",e=>{ eqVals[i]=+e.target.value; paintEq(); });
+  $("bands").appendChild(d);
+});
+Object.entries(EQ_PRESETS).forEach(([name,arr])=>{
+  const b=document.createElement("button"); b.type="button"; b.className="preset"; b.disabled=!WA;
+  b.innerHTML="<b></b>"; b.children[0].textContent=name;
+  b.onclick=()=>{ eqVals=arr.slice(); paintEq(); };
+  $("eq-presets").appendChild(b);
+});
+
+/* ============ Web Audio: цепочка эффектов ============ */
+let actx=null, analyser=null, wet=null, dry=null, filters=[];
+function makeImpulse(ctx){
+  const len=Math.floor(ctx.sampleRate*2.8), buf=ctx.createBuffer(2,len,ctx.sampleRate);
+  for(let ch=0;ch<2;ch++){ const d=buf.getChannelData(ch); let lp=0;
+    for(let i=0;i<len;i++){ const n=Math.random()*2-1; lp+=(n-lp)*.35; d[i]=lp*Math.pow(1-i/len,2.6); } }
+  return buf;
+}
+function ensureAudio(){
+  if(!WA || actx) return;
+  try{
+    actx=new (window.AudioContext||window.webkitAudioContext)();
+    const src=actx.createMediaElementSource(audio);
+    filters=BANDS.map((hz,i)=>{ const f=actx.createBiquadFilter();
+      f.type = i===0?"lowshelf":i===BANDS.length-1?"highshelf":"peaking"; f.frequency.value=hz; f.Q.value=1.1; f.gain.value=eqVals[i]; return f; });
+    let node=src; filters.forEach(f=>{ node.connect(f); node=f; });
+    dry=actx.createGain(); wet=actx.createGain();
+    const conv=actx.createConvolver(); conv.buffer=makeImpulse(actx);
+    const master=actx.createGain(); analyser=actx.createAnalyser(); analyser.fftSize=256; analyser.smoothingTimeConstant=.82;
+    node.connect(dry); node.connect(conv); conv.connect(wet);
+    dry.connect(master); wet.connect(master); master.connect(analyser); analyser.connect(actx.destination);
+    applyReverb(); actx.resume();
+  }catch(err){ console.warn("Web Audio недоступен:", err); actx=null; analyser=null; }
+}
+["pointerdown","keydown"].forEach(ev=>document.addEventListener(ev,ensureAudio,{once:true}));
+audio.addEventListener("play",()=>{ ensureAudio(); if(actx && actx.state==="suspended") actx.resume(); });
+
+if(!WA){ ["warn-remix","warn-eq"].forEach(id=>{ const w=$(id); w.innerHTML=WARN; w.hidden=false; });
+  $("rev").disabled=true; }
+applyRate(); applyReverb(); paintEq();
+
+/* ============ Вкладки ============ */
+const tabs=[...document.querySelectorAll(".tab")];
+function showTab(name){
+  tabs.forEach(t=>t.setAttribute("aria-selected", t.dataset.tab===name));
+  ["songs","remix","eq"].forEach(n=>{ $("panel-"+n).hidden = n!==name; });
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener("click",()=>showTab(t.dataset.tab));
+  t.addEventListener("keydown",e=>{
+    if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n=tabs[(i+(e.key==="ArrowRight"?1:-1)+tabs.length)%tabs.length]; n.focus(); showTab(n.dataset.tab); }
+  });
+});
+
+/* ============ Фоновая анимация ============ */
+const bg=$("bg"), bx=bg.getContext("2d");
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let BW=0,BH=0,E=0,freq=null;
+const ORBS=[
+  {x:.12,y:.18,r:.40,c:"211,162,99",a:.16,sp:.00021,ph:0},
+  {x:.88,y:.26,r:.44,c:"176,72,168",a:.20,sp:.00017,ph:2},
+  {x:.50,y:.98,r:.52,c:"112,62,200",a:.22,sp:.00014,ph:4},
+  {x:.80,y:.86,r:.34,c:"211,162,99",a:.14,sp:.00025,ph:1},
+  {x:.16,y:.78,r:.36,c:"210,84,140",a:.16,sp:.00019,ph:3},
+];
+function sizeBg(){ const d=Math.min(devicePixelRatio||1,1.5); BW=innerWidth; BH=innerHeight; bg.width=BW*d; bg.height=BH*d; bx.setTransform(d,0,0,d,0,0); }
+addEventListener("resize",()=>{ sizeBg(); if(reduce) drawBg(0); });
+function drawBg(t){
+  const playing=!audio.paused;
+  let bass=0, bars=null;
+  if(analyser && playing){
+    if(!freq) freq=new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteFrequencyData(freq);
+    let sum=0; for(let i=1;i<7;i++) sum+=freq[i]; bass=sum/6/255; bars=freq;
+  } else if(playing){
+    bass=.32+.22*Math.sin(t/430)+.12*Math.sin(t/190);
+  }
+  E+=(bass-E)*.16;
+  bx.clearRect(0,0,BW,BH);
+  const big=Math.max(BW,BH);
+  for(const o of ORBS){
+    const cx=(o.x+.07*Math.sin(t*o.sp*6+o.ph))*BW, cy=(o.y+.06*Math.cos(t*o.sp*5+o.ph))*BH;
+    const r=o.r*big*(1+.22*E);
+    const g=bx.createRadialGradient(cx,cy,0,cx,cy,r);
+    const a=o.a+.22*E;
+    g.addColorStop(0,`rgba(${o.c},${a})`); g.addColorStop(1,`rgba(${o.c},0)`);
+    bx.fillStyle=g; bx.fillRect(0,0,BW,BH);
+  }
+  // спектр внизу
+  const N=Math.max(24,Math.floor(BW/26)), gap=BW/N, bw=gap*.55, maxH=BH*.2;
+  for(let i=0;i<N;i++){
+    let v;
+    if(bars){ v=bars[Math.min(bars.length-1,Math.floor(Math.pow(i/N,1.5)*bars.length*.8)+1)]/255; }
+    else if(playing){ v=(.25+.2*Math.sin(t/260+i*.55)+.15*Math.sin(t/410+i*1.3))*(.6+.6*E); }
+    else { v=.05+.03*Math.sin(t/1200+i*.4); }
+    const h=Math.max(3,v*maxH);
+    bx.fillStyle=`rgba(211,162,99,${playing?.22:.08})`;
+    bx.beginPath(); bx.roundRect(i*gap+(gap-bw)/2,BH-h,bw,h,bw/2); bx.fill();
+  }
+}
+sizeBg();
+if(reduce){ drawBg(0); } else { (function loop(t){ drawBg(t); requestAnimationFrame(loop); })(0); }
+
+/* ---------- Окно «Скачать все песни» ---------- */
+const modal=$("modal");
+const openModal=()=>{ modal.classList.add("open"); $("m-close").focus(); };
+const closeModal=()=>{ modal.classList.remove("open"); $("dl-all").focus(); };
+$("dl-all").onclick=openModal;
+$("m-close").onclick=closeModal;
+modal.addEventListener("click",e=>{ if(e.target===modal) closeModal(); });
+modal.querySelectorAll("[data-close]").forEach(a=>a.addEventListener("click",()=>setTimeout(closeModal,300)));
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && modal.classList.contains("open")) closeModal(); });
+
+/* ---------- Заставка 3 секунды ---------- */
+setTimeout(()=>{ $("loader").classList.add("done"); },3000);
+
+/* Первый трек показываем сразу, но не запускаем сами */
+load(0,false);
+</script>
+</body>
+</html>
